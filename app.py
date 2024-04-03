@@ -32,10 +32,11 @@ def main():
 def scrape_market(search_term):
   
   encoded_term = urllib.parse.quote_plus(search_term)
-  flip_product = scrape_flipkart(encoded_term)
-  # scrape_hmm(search_term)
+  # flip_product = scrape_flipkart(encoded_term)
+  md_product = scrape_md(encoded_term)
   
-  market_list = [flip_product]
+  market_list = [md_product]
+  
   parse_data(market_list)
   
   
@@ -64,7 +65,7 @@ def scrape_flipkart(encoded_term):
     
     flipkart_product_url = "https://www.flipkart.com" + matched_element['href']
     
-    print(flipkart_product_url)
+    # print(flipkart_product_url)
     
     parsed_url = urlparse(flipkart_product_url)
     query_params = parse_qs(parsed_url.query)
@@ -101,16 +102,95 @@ def scrape_flipkart(encoded_term):
     st.write("Error: ", e)
   
   
-def parse_data(market_list):
-  cols = st.columns(len(market_list), gap="large")
+def scrape_md(encoded_term):
+  ua_fake = ua().random
+  custom_headers = {"User-Agent":ua_fake, 
+                  "Accept-Encoding":"gzip, deflate", 
+                  "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                  "DNT":"1",
+                  "Connection":"close", 
+                  "Upgrade-Insecure-Requests":"1"}
 
-  for idx, col in enumerate(cols):
-      product = market_list[idx]
-      with col:
-          st.markdown(f'<a href="{product["link"]}" target="_blank">{product["name"]}</a>', unsafe_allow_html=True)
-          st.image(product["image"])
-          st.write(f"Rating: {product['rating']}")
-          st.write(f"Price: {product['price']}")
+  search_term = "rtx 3060"
+  encoded_term = urllib.parse.quote_plus(search_term)
+
+  md_search_url = f"https://mdcomputers.in/index.php?search={encoded_term}&submit_search=&route=product%2Fsearch"
+  
+  try:
+    md_search_response = requests.get(md_search_url, headers= custom_headers)
+    md_search_soup = BeautifulSoup(md_search_response.text, 'html.parser')
+
+    file_path = "md_search_response.html"
+    # Open the file in write mode
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(md_search_soup.prettify())
+    
+    right_block = md_search_soup.find('div', class_='right-block right-b')
+    if right_block:
+    # Find the h4 tag within the div
+      h4_tag = right_block.find('h4')
+      if h4_tag:
+        a_tag = h4_tag.find('a')
+        if a_tag:
+          # Extract the text within the a tag
+          md_product_url = a_tag['href']
+
+    # matched_element = md_search_soup.find('div', href=lambda href: href and "/p/" in href)
+    
+    md_product_response = requests.get(md_product_url, headers= custom_headers)
+    md_product_soup = BeautifulSoup(md_product_response.text, 'lxml')
+
+    file_path = "md_product_response.html"
+    # Open the file in write mode
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(md_product_soup.prettify())
+        
+        
+    md_product = {}
+
+    md_product["name"] = md_product_soup.find("span", class_="product_name").text
+    md_product["price"] = md_product_soup.find("span", id="price-special").text
+
+    rating_div = md_product_soup.find("span", class_="rating-point")
+    if rating_div:
+      md_product["rating"] = rating_div.text
+    # md_product["rating"] = md_product_soup.find("span", class_="rating-point").text
+
+    image_div = md_product_soup.find("div", class_="large-image")
+    if image_div:
+      md_product["image"] = "https:"+image_div.find("img")['src']
+    # md_product["image"] = "https:"+md_product_soup.find("img", class_="large-image  ")['src']
+
+    md_product["link"] = md_product_url
+    
+    return md_product
+  
+  except Exception as e:
+    st.write("Error: ", e)
+    
+  
+def parse_data(market_list):
+    cols = st.columns(len(market_list), gap="large")
+
+    for idx, col in enumerate(cols):
+        product = market_list[idx]
+        with col:
+            st.markdown(f'<a href="{product["link"]}" target="_blank">{product["name"]}</a>', unsafe_allow_html=True)
+            if "image" in product:
+                st.image(product["image"], width=200)
+            else:
+                st.write("Image not available")
+            
+            if "rating" in product:
+                st.write(f"Rating: {product['rating']}")
+            else:
+                st.write("Rating not available")
+            
+            if "price" in product:
+                st.write(f"Price: {product['price']}")
+            else:
+                st.write("Price not available")
+
           
           
           
