@@ -36,7 +36,10 @@ def scrape_market(search_term):
   
   market_list = []
   
-  market_list.append(scrape_md(encoded_term))
+  md_product = scrape_md(encoded_term)
+  if md_product and len(md_product)>0:  
+    market_list.append(md_product)
+  
   vedant_product = scrape_vedant(encoded_term)
   if vedant_product and len(vedant_product)>0:
     market_list.append(vedant_product)
@@ -117,9 +120,6 @@ def scrape_md(encoded_term):
                   "Connection":"close", 
                   "Upgrade-Insecure-Requests":"1"}
 
-  search_term = "rtx 3060"
-  encoded_term = urllib.parse.quote_plus(search_term)
-
   md_search_url = f"https://mdcomputers.in/index.php?search={encoded_term}&submit_search=&route=product%2Fsearch"
   
   try:
@@ -183,9 +183,6 @@ def scrape_vedant(encoded_term):
                   "DNT":"1",
                   "Connection":"close", 
                   "Upgrade-Insecure-Requests":"1"}
-
-  search_term = "rtx 3060"
-  encoded_term = urllib.parse.quote_plus(search_term)
 
   vedant_search_url = f'https://www.vedantcomputers.com/index.php?route=product/search&search={encoded_term}'
 
