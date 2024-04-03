@@ -33,9 +33,15 @@ def scrape_market(search_term):
   
   encoded_term = urllib.parse.quote_plus(search_term)
   # flip_product = scrape_flipkart(encoded_term)
-  md_product = scrape_md(encoded_term)
   
-  market_list = [md_product]
+  market_list = []
+  
+  market_list.append(scrape_md(encoded_term))
+  vedant_product = scrape_vedant(encoded_term)
+  if vedant_product and len(vedant_product)>0:
+    market_list.append(vedant_product)
+
+  
   
   parse_data(market_list)
   
@@ -135,38 +141,103 @@ def scrape_md(encoded_term):
           # Extract the text within the a tag
           md_product_url = a_tag['href']
 
-    # matched_element = md_search_soup.find('div', href=lambda href: href and "/p/" in href)
+        # matched_element = md_search_soup.find('div', href=lambda href: href and "/p/" in href)
     
-    md_product_response = requests.get(md_product_url, headers= custom_headers)
-    md_product_soup = BeautifulSoup(md_product_response.text, 'lxml')
+          md_product_response = requests.get(md_product_url, headers= custom_headers)
+          md_product_soup = BeautifulSoup(md_product_response.text, 'lxml')
 
-    file_path = "md_product_response.html"
-    # Open the file in write mode
-    with open(file_path, 'w', encoding='utf-8') as file:
-        file.write(md_product_soup.prettify())
-        
-        
-    md_product = {}
+          file_path = "md_product_response.html"
+          # Open the file in write mode
+          with open(file_path, 'w', encoding='utf-8') as file:
+              file.write(md_product_soup.prettify())
+              
+              
+          md_product = {}
 
-    md_product["name"] = md_product_soup.find("span", class_="product_name").text
-    md_product["price"] = md_product_soup.find("span", id="price-special").text
+          md_product["name"] = md_product_soup.find("span", class_="product_name").text
+          md_product["price"] = md_product_soup.find("span", id="price-special").text
 
-    rating_div = md_product_soup.find("span", class_="rating-point")
-    if rating_div:
-      md_product["rating"] = rating_div.text
-    # md_product["rating"] = md_product_soup.find("span", class_="rating-point").text
+          rating_div = md_product_soup.find("span", class_="rating-point")
+          if rating_div:
+            md_product["rating"] = rating_div.text
+          # md_product["rating"] = md_product_soup.find("span", class_="rating-point").text
 
-    image_div = md_product_soup.find("div", class_="large-image")
-    if image_div:
-      md_product["image"] = "https:"+image_div.find("img")['src']
-    # md_product["image"] = "https:"+md_product_soup.find("img", class_="large-image  ")['src']
+          image_div = md_product_soup.find("div", class_="large-image")
+          if image_div:
+            md_product["image"] = "https:"+image_div.find("img")['src']
+          # md_product["image"] = "https:"+md_product_soup.find("img", class_="large-image  ")['src']
 
-    md_product["link"] = md_product_url
-    
-    return md_product
+          md_product["link"] = md_product_url
+          
+          return md_product
   
   except Exception as e:
     st.write("Error: ", e)
+
+
+def scrape_vedant(encoded_term):
+  ua_fake = ua().random
+  custom_headers = {"User-Agent":ua_fake, 
+                  "Accept-Encoding":"gzip, deflate", 
+                  "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                  "DNT":"1",
+                  "Connection":"close", 
+                  "Upgrade-Insecure-Requests":"1"}
+
+  search_term = "rtx 3060"
+  encoded_term = urllib.parse.quote_plus(search_term)
+
+  vedant_search_url = f'https://www.vedantcomputers.com/index.php?route=product/search&search={encoded_term}'
+
+  try:
+    vedant_search_response = requests.get(vedant_search_url, headers= custom_headers)
+    vedant_search_soup = BeautifulSoup(vedant_search_response.text, 'html.parser')
+
+    file_path = "vedant_search_response.html"
+    # Open the file in write mode
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(vedant_search_soup.prettify())
+        
+    product_card = vedant_search_soup.find('div', class_='name')
+    if product_card:
+      # name_div = product_card.find('div', class_='name')
+      a_tag = product_card.find('a')
+      vedant_product_url = a_tag['href']
+      
+      
+      vedant_product_response = requests.get(vedant_product_url, headers= custom_headers)
+      vedant_product_soup = BeautifulSoup(vedant_product_response.text, 'lxml')
+
+      file_path = "vedant_product_response.html"
+      # Open the file in write mode
+      with open(file_path, 'w', encoding='utf-8') as file:
+          file.write(vedant_product_soup.prettify())
+          
+      vedant_product = {}
+
+      vedant_product["name"] = vedant_product_soup.find("div", class_="title page-title").text
+      vedant_product["price"] = vedant_product_soup.find("div", class_="product-price-new").text
+
+      stars = vedant_product_soup.find_all('span', class_='fa fa-stack')  
+      if len(stars)>0:
+        vedant_product["rating"] = len(stars)
+        
+      img_container = vedant_product_soup.find('div', class_='swiper-slide')
+      img = img_container.find('img')
+      if img:
+        vedant_product["image"] = img['src']
+        
+      vedant_product["link"] = vedant_product_url
+      
+      return vedant_product
+    
+    else:
+      return {}
+  
+  
+  except Exception as e:
+    st.write("Error: ", e)
+    
     
   
 def parse_data(market_list):
@@ -184,7 +255,7 @@ def parse_data(market_list):
             if "rating" in product:
                 st.write(f"Rating: {product['rating']}")
             else:
-                st.write("Rating not available")
+                st.write("Rating: N/A")
             
             if "price" in product:
                 st.write(f"Price: {product['price']}")
