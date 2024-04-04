@@ -5,21 +5,9 @@ from bs4 import BeautifulSoup
 from fake_useragent import UserAgent as ua
 from urllib.parse import urlparse, parse_qs
 # from time import sleep
-
-
-# flip = {"name": "Combo of 2 Pack Running Shoes For Men  (Blue, Grey)", "price": "₹586", "rating": "3.6", "image": "https://rukminim2.flixcart.com/image/832/832/xif0q/shoe/h/b/h/10-rng-551-blu-514-gry-10-bruton-blue-grey-original-imagracyughuwe4w.jpeg?q=70&crop=false", "link":"https://www.flipkart.com/bruton-combo-2-pack-running-shoes-men/p/itm9672718d7ebee?q=blue+shoes&qH=72cf29364577a0b7"}
-# flip2 = {"name": "Combo of 2 Pack Running Shoes For Men  (Blue, Grey)", "price": "₹586", "rating": "3.6", "image": "https://rukminim2.flixcart.com/image/832/832/xif0q/shoe/h/b/h/10-rng-551-blu-514-gry-10-bruton-blue-grey-original-imagracyughuwe4w.jpeg?q=70&crop=false", "link":"https://www.flipkart.com/bruton-combo-2-pack-running-shoes-men/p/itm9672718d7ebee?q=blue+shoes&qH=72cf29364577a0b7"}
-# flip3 = {"name": "Combo of 2 Pack Running Shoes For Men  (Blue, Grey)", "price": "₹586", "rating": "3.6", "image": "https://rukminim2.flixcart.com/image/832/832/xif0q/shoe/h/b/h/10-rng-551-blu-514-gry-10-bruton-blue-grey-original-imagracyughuwe4w.jpeg?q=70&crop=false", "link":"https://www.flipkart.com/bruton-combo-2-pack-running-shoes-men/p/itm9672718d7ebee?q=blue+shoes&qH=72cf29364577a0b7"}
-
-# markets = [flip, flip2, flip3]
-
-# search_term = st.text_input("Search")
-
-
-# if st.button("Search"):
-#   scrape_market(search_term)
   
-  
+ 
+ 
   
 def main():
   st.title("Search for your product name or ID")
@@ -33,31 +21,6 @@ def main():
     else:
       st.error("Enter a valid search term")
     
-    
-  
-def scrape_market(search_term):
-  
-  encoded_term = urllib.parse.quote_plus(search_term)
-  # flip_product = scrape_flipkart(encoded_term)
-  
-  scrape_results={}
-  
-  # flip_product = scrape_flipkart(encoded_term)
-  # if flip_product and len(flip_product)>0:
-  #   market_list.append(flip_product)
-  
-  # md_product = scrape_md(encoded_term)
-  # if md_product and len(md_product)>0:  
-  #   market_list.append(md_product)
-  
-  vendant_list = scrape_vedant(encoded_term)
-  if vendant_list and len(vendant_list)>0:
-    scrape_results['vedant'] = vendant_list
-
-  
-  
-  parse_data(scrape_results)
-  
   
 def scrape_flipkart(encoded_term):
   ua_fake = ua().random
@@ -247,46 +210,6 @@ def scrape_vedant(encoded_term):
   except Exception as e:
     st.write("Error: ", e)
     
-    
-  
-# def parse_data(scrape_results):  
-    # cols = st.columns(len(market_list), gap="large")
-
-    # for idx, col in enumerate(cols):
-    #     product = market_list[idx]
-    #     with col:
-    #         st.markdown(f'<a href="{product["link"]}" target="_blank">{product["name"]}</a>', unsafe_allow_html=True)
-    #         if "image" in product:
-    #             st.image(product["image"], width=200)
-    #         else:
-    #             st.write("Image not available")
-            
-    #         if "rating" in product:
-    #             st.write(f"Rating: {product['rating']}")
-    #         else:
-    #             st.write("Rating: N/A")
-            
-    #         if "price" in product:
-    #             st.write(f"Price: {product['price']}")
-    #         else:
-    #             st.write("Price not available")
-
-  # card(scrape_results['vedant'])
-  # st.write(scrape_results['vedant'])
-  # st.write(scrape_results['vedant']['image'])
-
-
-
-def parse_data(scrape_results):
-    vedant_expander = st.expander("Vedant Computers", expanded=True)
-    with vedant_expander:
-      if 'vedant' in scrape_results:
-        vedant_col = st.columns(2)
-        for i in range(len(scrape_results['vedant'])):
-            card(scrape_results['vedant'][i], vedant_col[i])
-        st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
-      else:
-        st.error("No products found on Vedant Computers")
 
 def card(product, col):
     content = f"""
@@ -301,8 +224,38 @@ def card(product, col):
     col.markdown(content, unsafe_allow_html=True)
 
 
+def scrape_market(search_term):
+  
+  encoded_term = urllib.parse.quote_plus(search_term)
+  
+  scrape_results={}
+  
+  # flip_product = scrape_flipkart(encoded_term)
+  # if flip_product and len(flip_product)>0:
+  #   market_list.append(flip_product)
+  
+  # md_product = scrape_md(encoded_term)
+  # if md_product and len(md_product)>0:  
+  #   market_list.append(md_product)
+  
+  vendant_list = scrape_vedant(encoded_term)
+  if vendant_list and len(vendant_list)>0:
+    scrape_results['vedant'] = vendant_list
 
+  
+  parse_data(scrape_results)
+  
 
+def parse_data(scrape_results):
+    vedant_expander = st.expander("Vedant Computers", expanded=True)
+    with vedant_expander:
+      if 'vedant' in scrape_results:
+        vedant_col = st.columns(2)
+        for i in range(len(scrape_results['vedant'])):
+            card(scrape_results['vedant'][i], vedant_col[i])
+        st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
+      else:
+        st.error("No products found on Vedant Computers")
 
 
 
@@ -346,7 +299,7 @@ if __name__ == "__main__":
 
     .product-details a {
       text-decoration: none;
-      color: #333;
+      color: #c5cbc9;
     }
 
     .product-details a:hover {
@@ -355,7 +308,7 @@ if __name__ == "__main__":
 
     .product-details p.price {
       font-size: 1.1em;
-      color: #007bff;
+      color: #2d86c5;
       margin: 5px 0;
     }
   </style>
