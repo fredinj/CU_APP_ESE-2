@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from fake_useragent import UserAgent as ua
 from urllib.parse import urlparse, parse_qs
 # from time import sleep
-  
+import math
  
  
   
@@ -149,6 +149,10 @@ def scrape_md(encoded_term):
 
 
 def scrape_vedant(encoded_term):
+  
+  # get from setup later
+  item_count = 4  
+  
   ua_fake = ua().random
   custom_headers = {"User-Agent":ua_fake, 
                   "Accept-Encoding":"gzip, deflate", 
@@ -201,7 +205,7 @@ def scrape_vedant(encoded_term):
         
         products_list.append(product)
         
-        if len(products_list) >= 2:
+        if len(products_list) >= item_count:
           break
       
       return products_list
@@ -247,15 +251,27 @@ def scrape_market(search_term):
   
 
 def parse_data(scrape_results):
+    
+    items_per_row = 2
+    item_count = 0
+
     vedant_expander = st.expander("Vedant Computers", expanded=True)
+
     with vedant_expander:
+      # st.markdown("---")
       if 'vedant' in scrape_results:
-        vedant_col = st.columns(2)
-        for i in range(len(scrape_results['vedant'])):
-            card(scrape_results['vedant'][i], vedant_col[i])
-        st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
+        for i in range(0, len(scrape_results['vedant']), items_per_row):
+          with st.container():
+            vedant_col = st.columns(items_per_row)
+            for j in range(items_per_row):
+              if i + j < len(scrape_results['vedant']):
+                card(scrape_results['vedant'][i + j], vedant_col[j])
+                item_count += 1
+                if item_count >= 2:
+                  st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
+                  item_count = 0
       else:
-        st.error("No products found on Vedant Computers")
+          st.error("No products found on Vedant Computers")
 
 
 
