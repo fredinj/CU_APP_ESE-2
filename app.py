@@ -136,45 +136,42 @@ def scrape_md(encoded_term):
     with open(file_path, 'w', encoding='utf-8') as file:
         file.write(md_search_soup.prettify())
     
-    right_block = md_search_soup.find('div', class_='right-block right-b')
-    if right_block:
-    # Find the h4 tag within the div
-      h4_tag = right_block.find('h4')
-      if h4_tag:
-        a_tag = h4_tag.find('a')
-        if a_tag:
-          # Extract the text within the a tag
-          md_product_url = a_tag['href']
+    product_image_container = md_search_soup.find('div', class_='product-image-container')
+    if product_image_container:
+      a_tag = product_image_container.find('a')
+      if a_tag:
+        # Extract the text within the a tag
+        md_product_url = a_tag['href']
 
         # matched_element = md_search_soup.find('div', href=lambda href: href and "/p/" in href)
     
-          md_product_response = requests.get(md_product_url, headers= custom_headers)
-          md_product_soup = BeautifulSoup(md_product_response.text, 'lxml')
+        md_product_response = requests.get(md_product_url, headers= custom_headers)
+        md_product_soup = BeautifulSoup(md_product_response.text, 'lxml')
 
-          file_path = "md_product_response.html"
-          # Open the file in write mode
-          with open(file_path, 'w', encoding='utf-8') as file:
-              file.write(md_product_soup.prettify())
-              
-              
-          md_product = {}
+        file_path = "md_product_response.html"
+        # Open the file in write mode
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(md_product_soup.prettify())
+            
+            
+        md_product = {}
 
-          md_product["name"] = md_product_soup.find("span", class_="product_name").text
-          md_product["price"] = md_product_soup.find("span", id="price-special").text
+        md_product["name"] = md_product_soup.find("span", class_="more_show")["data-full_title"]
+        md_product["price"] = md_product_soup.find("span", id="price-special").text
 
-          rating_div = md_product_soup.find("span", class_="rating-point")
-          if rating_div:
-            md_product["rating"] = rating_div.text
-          # md_product["rating"] = md_product_soup.find("span", class_="rating-point").text
+        rating_div = md_product_soup.find("span", class_="rating-point")
+        if rating_div:
+          md_product["rating"] = rating_div.text
+        # md_product["rating"] = md_product_soup.find("span", class_="rating-point").text
 
-          image_div = md_product_soup.find("div", class_="large-image")
-          if image_div:
-            md_product["image"] = "https:"+image_div.find("img")['src']
-          # md_product["image"] = "https:"+md_product_soup.find("img", class_="large-image  ")['src']
+        image_div = md_product_soup.find("div", class_="large-image")
+        if image_div:
+          md_product["image"] = "https:"+image_div.find("img")['src']
+        # md_product["image"] = "https:"+md_product_soup.find("img", class_="large-image  ")['src']
 
-          md_product["link"] = md_product_url
-          
-          return md_product
+        md_product["link"] = md_product_url
+        
+        return md_product
     else:
       return {}
   
