@@ -226,10 +226,27 @@ def scrape_vedant(encoded_term):
       if len(stars)>0:
         vedant_product["rating"] = len(stars)
         
-      img_container = vedant_product_soup.find('div', class_='swiper-slide')
-      img = img_container.find('img')
-      if img:
-        vedant_product["image"] = img['data-cfsrc']
+      # img_container = vedant_product_soup.find('div', class_='swiper-slide')
+      # img = img_container.find('img')
+      # if img:
+      #     if 'data-cfsrc' in img:
+      #       vedant_product["image"] = img['src']
+      #     elif 'data-largeimg' in img:
+      #       vedant_product["image"] = img['src']
+      
+      img_wrapper = vedant_product_soup.find('div', class_='swiper-wrapper')
+      if img_wrapper:  
+        index_0 = img_wrapper.find('div', {'data-index': '0'})
+        if index_0:
+          img = index_0.find('img')
+          if img:
+            if 'data-cfsrc' in img:
+              vedant_product["image"] = img['data-cfsrc']
+            elif 'data-largeimg' in img:
+              vedant_product["image"] = img['data-largeimg']
+            elif 'src' in img:
+              vedant_product["image"] = img['src']
+      
         
       vedant_product["link"] = vedant_product_url
       
