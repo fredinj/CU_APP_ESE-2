@@ -4,6 +4,7 @@ import urllib.parse
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent as ua
 from urllib.parse import urlparse, parse_qs
+# from time import sleep
 
 
 # flip = {"name": "Combo of 2 Pack Running Shoes For Men  (Blue, Grey)", "price": "₹586", "rating": "3.6", "image": "https://rukminim2.flixcart.com/image/832/832/xif0q/shoe/h/b/h/10-rng-551-blu-514-gry-10-bruton-blue-grey-original-imagracyughuwe4w.jpeg?q=70&crop=false", "link":"https://www.flipkart.com/bruton-combo-2-pack-running-shoes-men/p/itm9672718d7ebee?q=blue+shoes&qH=72cf29364577a0b7"}
@@ -25,7 +26,12 @@ def main():
 
   search_term = st.text_input("Search")
   if st.button("Search"):  
-    scrape_market(search_term)
+    if len(search_term.strip()) != 0:
+      with st.spinner('Loading data...'):
+        # sleep(5)  # Sleep for 1 second
+        scrape_market(search_term.strip())
+    else:
+      st.error("Enter a valid search term")
     
     
   
@@ -34,23 +40,23 @@ def scrape_market(search_term):
   encoded_term = urllib.parse.quote_plus(search_term)
   # flip_product = scrape_flipkart(encoded_term)
   
-  market_list = []
+  scrape_results={}
   
-  flip_product = scrape_flipkart(encoded_term)
-  if flip_product and len(flip_product)>0:
-    market_list.append(flip_product)
+  # flip_product = scrape_flipkart(encoded_term)
+  # if flip_product and len(flip_product)>0:
+  #   market_list.append(flip_product)
   
-  md_product = scrape_md(encoded_term)
-  if md_product and len(md_product)>0:  
-    market_list.append(md_product)
+  # md_product = scrape_md(encoded_term)
+  # if md_product and len(md_product)>0:  
+  #   market_list.append(md_product)
   
-  vedant_product = scrape_vedant(encoded_term)
-  if vedant_product and len(vedant_product)>0:
-    market_list.append(vedant_product)
+  vendant_list = scrape_vedant(encoded_term)
+  if vendant_list and len(vendant_list)>0:
+    scrape_results['vedant'] = vendant_list
 
   
   
-  parse_data(market_list)
+  parse_data(scrape_results)
   
   
 def scrape_flipkart(encoded_term):
@@ -199,58 +205,43 @@ def scrape_vedant(encoded_term):
     with open(file_path, 'w', encoding='utf-8') as file:
         file.write(vedant_search_soup.prettify())
         
-    product_card = vedant_search_soup.find('div', class_='name')
-    if product_card:
-      # name_div = product_card.find('div', class_='name')
-      a_tag = product_card.find('a')
-      vedant_product_url = a_tag['href']
-      
-      
-      vedant_product_response = requests.get(vedant_product_url, headers= custom_headers)
-      vedant_product_soup = BeautifulSoup(vedant_product_response.text, 'lxml')
+    main_products_wrapper = vedant_search_soup.find('div', class_='main-products-wrapper')
+    p_tag = main_products_wrapper.find('p')
+    if p_tag:
+      if p_tag.text == "There is no product that matches the search criteria.":
+        return []
+        # print("no product found")  
 
-      file_path = "vedant_product_response.html"
-      # Open the file in write mode
-      with open(file_path, 'w', encoding='utf-8') as file:
-          file.write(vedant_product_soup.prettify())
-          
-      vedant_product = {}
-
-      vedant_product["name"] = vedant_product_soup.find("div", class_="title page-title").text
-      vedant_product["price"] = vedant_product_soup.find("div", class_="product-price-new").text
-
-      stars = vedant_product_soup.find_all('span', class_='fa fa-stack')  
-      if len(stars)>0:
-        vedant_product["rating"] = len(stars)
-        
-      # img_container = vedant_product_soup.find('div', class_='swiper-slide')
-      # img = img_container.find('img')
-      # if img:
-      #     if 'data-cfsrc' in img:
-      #       vedant_product["image"] = img['src']
-      #     elif 'data-largeimg' in img:
-      #       vedant_product["image"] = img['src']
-      
-      img_wrapper = vedant_product_soup.find('div', class_='swiper-wrapper')
-      if img_wrapper:  
-        index_0 = img_wrapper.find('div', {'data-index': '0'})
-        if index_0:
-          img = index_0.find('img')
-          if img:
-            if 'data-cfsrc' in img:
-              vedant_product["image"] = img['data-cfsrc']
-            elif 'data-largeimg' in img:
-              vedant_product["image"] = img['data-largeimg']
-            elif 'src' in img:
-              vedant_product["image"] = img['src']
-      
-        
-      vedant_product["link"] = vedant_product_url
-      
-      return vedant_product
-    
     else:
-      return {}
+      
+      product_grid = vedant_search_soup.find('div', class_="main-products product-grid")
+      if product_grid:
+        product_div = product_grid.find_all('div', class_='product-layout has-extra-button')
+          
+      products_list = []
+      for i in product_div:
+        product = {}
+        product["name"] = i.find('div', class_='product-thumb').find('div', class_='caption').find('div', class_="name").find('a').text.strip()
+        if i.find('div', class_='product-thumb').find('div', class_='caption').find('div', class_="price").find('span', class_="price-new"):
+          product["price"] = i.find('div', class_='product-thumb').find('div', class_='caption').find('div', class_="price").find('span', class_="price-new").text.strip()
+        else:
+          product["price"] = i.find('div', class_='product-thumb').find('div', class_='caption').find('div', class_="price").find('span', class_="price-normal").text.strip()
+        product["link"] = i.find('div', class_='product-thumb').find('div', class_='caption').find('div', class_="name").find('a')['href']
+        
+        img_src_set = i.find('div', class_='product-thumb').find('div', class_='image').find('a', class_="product-img").find('div').find('img')['data-srcset']
+        srcset_parts = img_src_set.split(', ')
+        if '2x' in srcset_parts[1]:
+          url, resolution = srcset_parts[1].split(' ')
+        else:
+          url = i.find('div', class_='product-thumb').find('div', class_='image').find('a', class_="product-img").find('div').find('img')['data-src']
+        product["image"] = url
+        
+        products_list.append(product)
+        
+        if len(products_list) >= 2:
+          break
+      
+      return products_list
   
   
   except Exception as e:
@@ -258,38 +249,118 @@ def scrape_vedant(encoded_term):
     
     
   
-def parse_data(market_list):
-    cols = st.columns(len(market_list), gap="large")
+# def parse_data(scrape_results):  
+    # cols = st.columns(len(market_list), gap="large")
 
-    for idx, col in enumerate(cols):
-        product = market_list[idx]
-        with col:
-            st.markdown(f'<a href="{product["link"]}" target="_blank">{product["name"]}</a>', unsafe_allow_html=True)
-            if "image" in product:
-                st.image(product["image"], width=200)
-            else:
-                st.write("Image not available")
+    # for idx, col in enumerate(cols):
+    #     product = market_list[idx]
+    #     with col:
+    #         st.markdown(f'<a href="{product["link"]}" target="_blank">{product["name"]}</a>', unsafe_allow_html=True)
+    #         if "image" in product:
+    #             st.image(product["image"], width=200)
+    #         else:
+    #             st.write("Image not available")
             
-            if "rating" in product:
-                st.write(f"Rating: {product['rating']}")
-            else:
-                st.write("Rating: N/A")
+    #         if "rating" in product:
+    #             st.write(f"Rating: {product['rating']}")
+    #         else:
+    #             st.write("Rating: N/A")
             
-            if "price" in product:
-                st.write(f"Price: {product['price']}")
-            else:
-                st.write("Price not available")
+    #         if "price" in product:
+    #             st.write(f"Price: {product['price']}")
+    #         else:
+    #             st.write("Price not available")
 
-          
-          
-          
-          
-          
-          
-          
+  # card(scrape_results['vedant'])
+  # st.write(scrape_results['vedant'])
+  # st.write(scrape_results['vedant']['image'])
+
+
+
+def parse_data(scrape_results):
+    vedant_expander = st.expander("Vedant Computers", expanded=True)
+    with vedant_expander:
+      if 'vedant' in scrape_results:
+        vedant_col = st.columns(2)
+        for i in range(len(scrape_results['vedant'])):
+            card(scrape_results['vedant'][i], vedant_col[i])
+        st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
+      else:
+        st.error("No products found on Vedant Computers")
+
+def card(product, col):
+    content = f"""
+    <div class="product-card">
+        <img src="{product['image']}" alt="Product Image">
+        <div class="product-details">
+            <h2><a href="{product['link']}">{product['name']}</a></h2>
+            <p class="price">{product['price']}</p>
+        </div>
+    </div>
+    """
+    col.markdown(content, unsafe_allow_html=True)
+
+
+
+
+
+
+
 if __name__ == "__main__":
   st.set_page_config(
     page_title="Advanced Python Project" # page_icon=""
+  )
+  
+  st.markdown(
+  """
+  <style>
+    .product-card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 250px; /* Fixed width */
+      height: auto; /* Allow height to adjust based on content */
+      margin: 0 auto; /* Center the card */
+      overflow: hidden; /* Ensure contents don't overflow */
+      display: flex; /* Use flexbox for layout */
+      flex-direction: column; /* Stack child elements vertically */
+    }
+
+    .product-card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      flex-shrink: 0; /* Prevent image from shrinking */
+    }
+
+    .product-details {
+      flex-grow: 1; /* Allow details to expand to fill remaining space */
+      text-align: center;
+    }
+
+    .product-details h2 {
+      margin: 10px 0;
+      font-size: 1.2em;
+    }
+
+    .product-details a {
+      text-decoration: none;
+      color: #333;
+    }
+
+    .product-details a:hover {
+      color: #007bff;
+    }
+
+    .product-details p.price {
+      font-size: 1.1em;
+      color: #007bff;
+      margin: 5px 0;
+    }
+  </style>
+  """,
+  unsafe_allow_html=True
   )
   
   main()
