@@ -1,0 +1,1 @@
+# Setup variables like the total number of items searched number of market places and the number of items per marketplace
