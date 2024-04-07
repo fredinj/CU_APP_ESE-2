@@ -6,26 +6,19 @@ from fake_useragent import UserAgent as ua
 from urllib.parse import urlparse, parse_qs
 import re
 import pandas as pd
-from time import sleep
-# import math
 
-# adjustable search number limit on sidebar
-# save for analysis button
-# make analysis
-# sort products based on price
-#  maybe (scatter) plots based on price and different colors for different stores
  
  
   
 def main():
-  st.title("Search for your product name or ID")
+  st.title("Search Product Name or ID")
 
   st.sidebar.header("Settings")
   item_count = st.sidebar.slider("Number of Products to Display", min_value=1, max_value=6, value=4)
   
   scrape_results={}
 
-  search_term = st.text_input("Search")
+  search_term = st.text_input("")
   if st.button("Search"):  
     if len(search_term.strip()) != 0:
       with st.spinner('Loading data...'):
@@ -399,7 +392,7 @@ def parse_data(scrape_results):
 
 if __name__ == "__main__":
   st.set_page_config(
-    page_title="Advanced Python Project" # page_icon=""
+    page_title="Search: Streamlit" # page_icon=""
   )
   st.markdown(
   """
