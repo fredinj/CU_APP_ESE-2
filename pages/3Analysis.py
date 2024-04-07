@@ -80,7 +80,7 @@ def main():
             height=400
         )
 
-        st.write("Scatter plot:")
+        st.write("Price plot:")
         st.altair_chart(chart, use_container_width=True)
 
 if __name__ == '__main__':

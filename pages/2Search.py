@@ -8,7 +8,7 @@ import pandas as pd
 
  
 def main():
-  st.title("Search Product Name or ID")
+  st.title("Search Product Name or Product ID")
 
   st.sidebar.header("Settings")
   item_count = st.sidebar.slider("Number of Products to Display", min_value=1, max_value=6, value=4)
