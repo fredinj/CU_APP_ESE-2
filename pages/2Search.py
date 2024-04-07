@@ -389,11 +389,9 @@ def parse_data(scrape_results):
           product['source'] = source
           all_products.append(product)
 
+  # Save the DataFrame to a CSV file
   df = pd.DataFrame(all_products)
   df.to_csv('scraped_data.csv', index=False)
-
-  # Save the DataFrame to a CSV file
-  df.to_csv('product_data.csv', index=False)
   st.sidebar.success("Data saved for analysis")
   
 
