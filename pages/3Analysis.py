@@ -12,7 +12,6 @@ def clean_price(price):
 def preprocess_store(store_name):
     # Dictionary mapping original store names to new names
     store_mapping = {'md': 'MD Computers', 'vedant': 'Vedant Computers', 'prime': 'PrimeABGB'}
-    # Return the new name if found, otherwise return the original name
     return store_mapping.get(store_name, store_name)
 
 def main():
@@ -22,9 +21,8 @@ def main():
     df['source'] = df['source'].apply(preprocess_store)
     df['price'] = df['price'].apply(clean_price)
 
-    # Sorting options
     sort_options = ['None', 'Sort by Price (ascending)', 'Sort by Price (descending)', 'Sort by Source']
-    default_sort_option = 'None'  # Set default sorting option
+    default_sort_option = 'None'
     sort_option = st.selectbox("Select sorting option:", sort_options, index=sort_options.index(default_sort_option))
 
     if sort_option == 'Sort by Price (ascending)':
@@ -34,25 +32,22 @@ def main():
     elif sort_option == 'Sort by Source':
         df_sorted = df.sort_values(by='source')
     else:
-        df_sorted = df.copy()  # Assigning original DataFrame when sorting option is 'None'
+        df_sorted = df.copy()
 
     st.write("Sorted DataFrame:")
     st.write(df_sorted)
 
     st.markdown("---")
 
-    # Checkbox for showing summary
     show_summary = st.checkbox("Show Summary")
 
     if show_summary:
         st.write("Summary:")
-        # Display highest priced product and store
         highest_priced_product = df_sorted.loc[df_sorted['price'].idxmax()]
         st.markdown("**Highest Priced Product:** " + highest_priced_product['name'])
         st.markdown("**Price:** " + str(highest_priced_product['price']))
         st.markdown("**Store:** " + highest_priced_product['source'])
 
-        # Display lowest priced product and store
         lowest_priced_product = df_sorted.loc[df_sorted['price'].idxmin()]
         st.markdown("**Lowest Priced Product:** " + lowest_priced_product['name'])
         st.markdown("**Price:** " + str(lowest_priced_product['price']))
@@ -63,7 +58,7 @@ def main():
         # Scatter plot        
         scatter_data = pd.DataFrame(columns=['x', 'y', 'Product', 'Store'])
         colors = {'MD Computers': 'red', 'Vedant Computers': 'blue', 'PrimeABGB': 'green'}
-        dfs = []  # list to hold all temporary dataframes
+        dfs = []  
         for store in df['source'].unique():
             data = df[df['source'] == store]
             temp_df = pd.DataFrame({
@@ -72,15 +67,14 @@ def main():
                 'Product': data['name'].tolist(),
                 'Store': [store]*len(data)
             })
-            dfs.append(temp_df)  # append the temporary dataframe to the list
-        scatter_data = pd.concat(dfs, ignore_index=True)  # concatenate all dataframes in the list
+            dfs.append(temp_df)  
+        scatter_data = pd.concat(dfs, ignore_index=True) 
         
-        # Create the scatter plot using Altair
         chart = alt.Chart(scatter_data).mark_circle(size=150).encode(
-            x=alt.X('x:Q', axis=alt.Axis(title='Product')),  # Set x-axis label as "Product"
-            y=alt.Y('y:Q', axis=alt.Axis(title='Price')),  # Set y-axis label as "Price"
-            color=alt.Color('Store:N', scale=alt.Scale(domain=list(colors.keys()), range=list(colors.values()))),  # color encoding for stores
-            tooltip=['Product', 'x', 'y']  # tooltip with product name, x, and y values
+            x=alt.X('x:Q', axis=alt.Axis(title='Product')),  
+            y=alt.Y('y:Q', axis=alt.Axis(title='Price')),  
+            color=alt.Color('Store:N', scale=alt.Scale(domain=list(colors.keys()), range=list(colors.values()))),  
+            tooltip=['Product', 'x', 'y']  
         ).properties(
             width=600,
             height=400

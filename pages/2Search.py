@@ -4,12 +4,9 @@ import urllib.parse
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent as ua
 from urllib.parse import urlparse, parse_qs
-import re
 import pandas as pd
 
  
- 
-  
 def main():
   st.title("Search Product Name or ID")
 
@@ -22,7 +19,6 @@ def main():
   if st.button("Search"):  
     if len(search_term.strip()) != 0:
       with st.spinner('Loading data...'):
-        # sleep(5)  # Sleep for 1 second
         scrape_results = scrape_markets(search_term.strip(), item_count)
         
         parse_data(scrape_results)
@@ -30,7 +26,6 @@ def main():
     else:
       st.error("Enter a valid search term")
       
-
 
 def scrape_markets(search_term, item_count):
   
@@ -387,8 +382,6 @@ def parse_data(scrape_results):
   df.to_csv('scraped_data.csv', index=False)
   st.sidebar.success("Data saved for analysis")
   
-
-
 
 if __name__ == "__main__":
   st.set_page_config(
