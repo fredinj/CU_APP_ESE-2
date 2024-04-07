@@ -20,14 +20,12 @@ def main():
     
     # Preprocess store names
     df['source'] = df['source'].apply(preprocess_store)
+    df['price'] = df['price'].apply(clean_price)
 
     # Sorting options
     sort_options = ['None', 'Sort by Price (ascending)', 'Sort by Price (descending)', 'Sort by Source']
-    default_sort_option = 'Sort by Price (ascending)'  # Set default sorting option
+    default_sort_option = 'None'  # Set default sorting option
     sort_option = st.selectbox("Select sorting option:", sort_options, index=sort_options.index(default_sort_option))
-
-    if sort_option == 'Sort by Price (ascending)' or sort_option == 'Sort by Price (descending)':
-        df['price'] = df['price'].apply(clean_price)  # Clean the 'price' column
 
     if sort_option == 'Sort by Price (ascending)':
         df_sorted = df.sort_values(by='price', ascending=True)
@@ -60,11 +58,9 @@ def main():
         st.markdown("**Price:** " + str(lowest_priced_product['price']))
         st.markdown("**Store:** " + lowest_priced_product['source'])
 
-
-
         st.markdown("---")
 
-        # Scatter plot
+        # Scatter plot        
         scatter_data = pd.DataFrame(columns=['x', 'y', 'Product', 'Store'])
         colors = {'MD Computers': 'red', 'Vedant Computers': 'blue', 'PrimeABGB': 'green'}
         dfs = []  # list to hold all temporary dataframes
