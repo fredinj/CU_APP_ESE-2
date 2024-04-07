@@ -1,7 +1,7 @@
 import streamlit as st
 
 def main():
-    st.title("Welcome to the Product Scraping and Analysis App")
+    st.title("Product Scraping and Analysis App")
     st.write(
         """
         This app allows you to search for products across multiple online stores 
